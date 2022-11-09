@@ -1,0 +1,18 @@
+
+
+# add_executable(loader loader.S)
+# add_executable(mbr mbr.S)
+# set_target_properties(mbr loader
+#	PROPERTIES SUFFIX .bin)
+
+cmake_print_variables(
+	# CMAKE_ASM_NASM_COMPILER	# nasm
+	# CMAKE_ASM_NASM_LINK_FLAGS
+	CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS
+	CMAKE_ASM_NASM_OBJECT_FORMAT
+	CMAKE_ASM_NASM_FLAGS
+	 
+	CMAKE_ASM_NASM_LINK_EXECUTABLE	
+	CMAKE_ASM_NASM_COMPILE_OBJECT
+	CMAKE_NASM_LINK_EXECUTABLE
+)
