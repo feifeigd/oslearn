@@ -6,8 +6,9 @@ section MBR vstart=0x7c00
 	
 	mov ds, ax	
 	mov es, ax
-	mov ss, ax
 	mov fs, ax
+	mov gs, ax
+	mov ss, ax
 	
 	mov sp, 0x7c00
 	
