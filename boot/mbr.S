@@ -1,7 +1,7 @@
 
 ; 主引导程序
 ;------------------------------------------
-SECTION MBR vstart=0x7c00
+section MBR vstart=0x7c00
 	mov ax, cs
 	
 	mov ds, ax	
@@ -10,6 +10,11 @@ SECTION MBR vstart=0x7c00
 	mov fs, ax
 	
 	mov sp, 0x7c00
+	
+	call clear
+	call get_cursor
+	call print
+	jmp $	; 使程序悬停在此
 	
 ; 清屏利用 0x06号功能,上卷全部行，则可清屏
 ;-------------------------------------------
@@ -22,21 +27,25 @@ SECTION MBR vstart=0x7c00
 ; (CL, CH) = 窗口左上角的(X,Y)位置
 ; (DL, DH) = 窗口右下角的(X,Y)位置
 ; 无返回值
+clear:
 	mov ax, 0x600
 	mov bx, 0x700
 	mov cx, 0	; 左上角
-	mov dx, 0x184f; 右下角(80, 25)
+	mov dx, 0x184f; 右下角(80, 25), 默认计算机显卡在加电后置为80*25文本模式
 	int 0x10;
-	
-	
+	ret
+		
 ;;;;;;;;;;;;;;;;;;;;; 下面这三行代码获取光标位置;;;;;;;;;;;;;;;;;;;;
 ;.get_cursor 获取当前光标位置，在光标位置处打印字符
+get_cursor:
 	mov ah, 3; 输入：3号子功能是获取光标位置，需要存入ah
-	mov bh, 0; bh 寄存器存储的是待获取光标的页号
+	mov bh, 0; bh 寄存器存储的是待获取光标的页号，第0页是默认页
 	
 	int 0x10; 输出；ch=光标开始行，cl=光标结束行，dh=光标所在行号，dl=光标所在列号
+	ret
 	
 ; 打印字符串
+print:
 	mov ax, message
 	mov bp, ax; es:bp 为串首地址，es此时同cs一致，开头时已经为sreg初始化
 	
@@ -46,9 +55,9 @@ SECTION MBR vstart=0x7c00
 	mov bx, 0x2; bh 存储要显示的页号，此处是第0页，bl中是字符属性，属性黑底绿字(bl=02h)
 	
 	int 0x10;
+	ret
 	
-	jmp $	; 使程序悬停在此
-	
+
 	message db "1 MBR"
 	times 510 - ($ - $$) db 0
 	db 0x55, 0xaa
