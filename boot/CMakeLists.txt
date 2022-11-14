@@ -1,18 +1,28 @@
 
+set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS asm nasm  S)	# 加入 S 后缀
+set(CMAKE_ASM_NASM_OBJECT_FORMAT bin)
+#只是生成汇编的预处理文件
+set(CMAKE_ASM_NASM_FLAGS "-e") # 
+
+# set(CMAKE_ASM_NASM_LINK_EXECUTABLE "nasm <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+enable_language(ASM_NASM)
 
 # add_executable(loader loader.S)
-# add_executable(mbr mbr.S)
-# set_target_properties(mbr loader
-#	PROPERTIES SUFFIX .bin)
+add_executable(mbr mbr.S)
+set_target_properties(mbr #loader
+	PROPERTIES 
+		SUFFIX .bin 
+		# LINKER_LANGUAGE NASM
+)
 
 cmake_print_variables(
 	# CMAKE_ASM_NASM_COMPILER	# nasm
 	# CMAKE_ASM_NASM_LINK_FLAGS
-	CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS
+	# CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS
 	CMAKE_ASM_NASM_OBJECT_FORMAT
 	CMAKE_ASM_NASM_FLAGS
 	 
 	CMAKE_ASM_NASM_LINK_EXECUTABLE	
 	CMAKE_ASM_NASM_COMPILE_OBJECT
-	CMAKE_NASM_LINK_EXECUTABLE
+	# CMAKE_NASM_LINK_EXECUTABLE
 )

@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 project(oslearn
 	VERSION 22.11.09.01
-	LANGUAGES ASM_NASM C CXX 
+	# LANGUAGES ASM_NASM C CXX 
 	DESCRIPTION "OS 学习 项目"
 )
 
