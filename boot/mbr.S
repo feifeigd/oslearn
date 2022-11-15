@@ -1,6 +1,7 @@
 
 %include "boot.inc"
 
+bits 16
 ; 主引导程序
 ;------------------------------------------
 section MBR vstart=0x7c00
@@ -18,7 +19,7 @@ section MBR vstart=0x7c00
 	call clear
 	call get_cursor
 	; call print
-	; call set_screen
+	call set_screen
 
 	mov eax, LOADER_START_SECTOR; 起始扇区lab地址
 	mov bx, LOADER_BASE_ADDR; 写入的地址
@@ -95,15 +96,15 @@ rd_disk_m_16:
 	; eax=LBA扇区号
 	; bx=将数据写入的内存地址
 	; cx=读入的扇区数
-	mov esi, eax
-	mov di,cx
+	mov esi, eax; 备份
+	mov di,cx; 备份
 ; 读写硬盘：
 ; 第一步：设置要读取的扇区数
 	mov dx, 0x1f2; sector count
 	mov al, cl
 	out dx, al; 读取是扇区数
 	mov eax, esi; 恢复ax
-; 第二部：将LBA地址存入 0x1f3 ~ 0x1f6
+; 第二步：将LBA地址存入 0x1f3 ~ 0x1f6
 	; LBA地址7~0位写入端口 0x1f3
 	mov dx, 0x1f3
 	out dx, al
@@ -125,7 +126,7 @@ rd_disk_m_16:
 
 ; 第三步： 向 0x1f7端口写入读命令， 0x20
 	mov dx, 0x1f7;
-	mov al, 0x20;
+	mov al, 0x20; 
 	out dx, al
 ; 第四步： 检测硬盘状态
 .not_ready:
