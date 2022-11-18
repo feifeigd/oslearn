@@ -4,6 +4,13 @@ LOADER_BASE_ADDR 	equ 0x900
 LOADER_START_SECTOR equ 0x2; LBA 地址，第2块扇区. 第0个扇区是MBR，第1个扇区空置还没使用
 LOADER_SECTOR_COUNT equ 2; loader的大小占用多少个扇区
 
+PAGE_DIR_TABLE_POS	equ 0x00100000; 页目录表物理地址， 起始1MB
+
+KB1		equ 0x400; 1KB
+KB4 	equ 0x1000; 4KB
+KB64	equ 0x10000; 64KB
+MB1 	equ 0x100000; 1MB
+PAGE1	equ KB4
 ;---------------------------- gdt 描述符属性
 
 ; 段描述符高4字节的第23bit是G位(Granularity 粒度)，G=0表示段界限单位是 1B，G=1表示段界限单位是4KB；段界限用20个bit表示
@@ -100,3 +107,10 @@ RPL1_0_3 equ 11b;
 
 TI2_GDT equ 000b; 在GDT中
 TI2_LDT equ 100b; 在LDT中
+
+;---------------------------- 页表相关属性
+PAGE_P0		equ 1b; Present
+PAGE_RW1_R	equ 00b; 可读不可写
+PAGE_RW1_W	equ 10b; 可读可写
+PAGE_US2_S	equ 000b; Supervisor
+PAGE_US2_U	equ 100b; User

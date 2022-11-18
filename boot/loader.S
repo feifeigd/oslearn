@@ -136,18 +136,18 @@ detect_memory:
 	jc .e801_failed_so_try88; 若当前e801方法失败，就尝试0x88方法
 ; 1 先算出低15MB的内存
 ; ax 和 cx 中是以KB为单位的内存数量，将其转换为以byte为单位
-	mov cx, 0x400; 1KB,cx 和 ax值一样，cx用作乘数
+	mov cx, KB1; 1KB,cx 和 ax值一样，cx用作乘数
 	mul cx;
 	shr edx, 16
 	and eax, 0x0000FFFF;
 	or edx, eax;
-	add edx, 0x100000; ax 只是15MB，故要加上1MB
+	add edx, MB1; ax 只是15MB，故要加上1MB
 	mov esi, edx; 先把15MB的内存量存入esi寄存器备份
 ; 2 再将16MB以上的内存转换为byte为单位
 ; 寄存器 bx 和 dx中是以64KB为单位的内存数量
 	xor eax, eax;
 	mov ax, bx;
-	mov ecx, 0x10000; 64KB
+	mov ecx, KB64; 64KB
 	mul ecx 
 	add esi, eax; 由于此方法只能测出4GB以内的内存，故32位eax足够了, edx肯定为0，只加eax即可
 	mov edx, esi; edx 为总内存大小
@@ -161,17 +161,68 @@ detect_memory:
 	jc .error_hlt
 	and eax, 0x0000FFFF
 	; 16位乘法积为32位，积的高16位在dx中，积的低16位在ax中
-	mov cx, 0x400; 将 ax 转为byte为单位
+	mov cx, KB1; 将 ax 转为byte为单位
 	mul cx;
 	shl edx, 16; 把dx移到高16位
 	or edx, eax;
-	add edx, 0x100000; 0x88 子功能只会返回1MB 以上的内存，故实际内存大小要加上1MB
+	add edx, MB1; 0x88 子功能只会返回1MB 以上的内存，故实际内存大小要加上1MB
 .error_hlt:
 	jmp $
 .mem_get_ok:
 	mov [total_mem_bytes], edx; 获得了内存容量 b 0xc03
 
 	ret;
+
+;-------------------- 创建页目录及页表
+setup_page:	; TODO
+; 先把页目录占用空间清零
+	mov ecx, KB4; 4KB
+	mov esi, 0
+.clear_page_dir:
+	mov byte[PAGE_DIR_TABLE_POS + esi], 0
+	inc esi
+	loop .clear_page_dir
+
+; 开始创建页目录项(PDE)
+.create_pde: ; 创建 Page Directory Entry
+	mov eax, PAGE_DIR_TABLE_POS
+	add eax, PAGE1 * 1; 此时eax 为第一个页表的位置及属性
+	mov ebx, eax;
+
+; 下面将页表项 0 和 0xc00 都存为第一个页表的地址，每个页表 表示4KB/4B*4KB=4MB内存
+; 这样0xc03fffff 以下的地址和 0x003fffff 以下的地址都指向相同的页表
+; 这是为将地址映射为内核地址做准备
+	or eax, PAGE_US2_U | PAGE_RW1_W | PAGE_P0; 页表项的属性RW和P为1，US为1，表示用户属性，所有特权级别都可以访问
+	mov [PAGE_DIR_TABLE_POS + 0x0], eax; 第一个目录项，在页目录表中的第一个目录项写入第一个页表的位置(0x101000)及属性(7)
+	mov [PAGE_DIR_TABLE_POS + 0xc00], eax; 一个页表项占用4字节，0xc00 表示第0xc00/4=768个页表占用的目录项，0xc00以上的目录项用于内核空间，
+	; 也就是页表的 0xc0000000 ~ 0xffffffff 共计1G属于内核
+	; 0x0 ~ 0xbfffffff 共计3G属于用户进程
+	; sub eax, PAGE1
+	mov eax, PAGE_DIR_TABLE_POS
+	mov [PAGE_DIR_TABLE_POS + PAGE1 - 4], eax; 使最后一个目录项指向页目录表自己的地址
+
+; 下面创建页表项(PTE)
+	mov ecx, MB1 / KB4; 有多少个页表项, 1MB低端内存/每页大小4KB， MB1 / KB4 = 256. 
+	mov esi, 0
+	mov edx, 0 | PAGE_US2_U | PAGE_RW1_W | PAGE_P0; US=1,RW=1,P=1. 1MB 低端内存
+.create_pte: ; Page Table Entry
+	mov [ebx + esi * 4], edx; 	// ebx 为第0个页表
+	inc esi;
+	add edx, PAGE1;	下一页
+	loop .create_pte
+
+; 创建内核其他的PDE TODO
+	mov eax, PAGE_DIR_TABLE_POS	
+	add eax, PAGE1 * 2; 此时eax 为第二个页表的位置
+	;or eax,
+
+.create_kernel_pte: ; Page Table Entry
+	mov [ebx + esi * 4], edx; 	// ebx 为第0个页表
+	inc esi;
+	add edx, PAGE1;	下一页
+	loop .create_pte
+
+	ret
 
 [bits 32]
 p_mode_start:
