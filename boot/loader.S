@@ -91,6 +91,87 @@ print:
 	int 0x10;
 	ret
 
+; 获取物理内存大小, 从强到弱 0xe820 -> 0xe801 -> 0x88
+detect_memory:
+; int 15h eax=0000E820h, edx=534D4150h('SMAP')获取内存布局
+	xor ebx, ebx; 第一次调用时 ebx值要是0.只赋值一次，循环体中不会改变
+	mov edx, 534D4150h
+	mov di, ards_buf; es 已经在mbr中赋值
+	xor esi, esi; 存放最大内存大小
+.e820_mem_get_loop:
+	mov eax, 0x0000e820; 执行int 15h后，eax值变为0x534d4150,eax/ebx/ecx都会更新，所以每次循环要更新为子功能号
+	mov ecx, 14h; ARDS 地址范围描述符结构体大小是20字节
+
+	int 15h
+
+	jc .e820_failed_so_try_e801; 若 cf位为1则有错误发生，尝试 0xe801子功能
+
+	inc word [ards_nr]; 
+
+	cmp ebx, 0; 若 ebx为0且cf不为1，这说明ards全部返回
+	jz .end_e820_mem_get_loop
+
+; 在所有ards结构体中，找出 (base_add_low + length_low) 的最大值，即内存的容量
+
+; 无需判断type是否为1，最大的内存块一定是可被使用的
+	mov eax, [BaseAddrLow]; base_addr_low
+	add eax, [LengthLow]; length_low
+
+	cmp esi, eax; 冒泡排序，找出最大，edx寄存器始终是最大的内存容量
+	jge .next_ards
+	mov esi, eax; 替换最大值
+.next_ards:
+	jmp .e820_mem_get_loop
+.end_e820_mem_get_loop:
+
+	mov edx, esi
+	jmp .mem_get_ok
+
+;--------- int 15h, ax=e801h获取内存大小，最大支持4G
+; 返回后， ax cx值一样，以KB为单位, bx dx值一样，以64KB 为单位
+; 在 ax和cx寄存器中为低16MB，在bx和dx中为16MB到4G
+.e820_failed_so_try_e801:
+	mov ax, 0xe801;
+	int 15h;
+	jc .e801_failed_so_try88; 若当前e801方法失败，就尝试0x88方法
+; 1 先算出低15MB的内存
+; ax 和 cx 中是以KB为单位的内存数量，将其转换为以byte为单位
+	mov cx, 0x400; 1KB,cx 和 ax值一样，cx用作乘数
+	mul cx;
+	shr edx, 16
+	and eax, 0x0000FFFF;
+	or edx, eax;
+	add edx, 0x100000; ax 只是15MB，故要加上1MB
+	mov esi, edx; 先把15MB的内存量存入esi寄存器备份
+; 2 再将16MB以上的内存转换为byte为单位
+; 寄存器 bx 和 dx中是以64KB为单位的内存数量
+	xor eax, eax;
+	mov ax, bx;
+	mov ecx, 0x10000; 64KB
+	mul ecx 
+	add esi, eax; 由于此方法只能测出4GB以内的内存，故32位eax足够了, edx肯定为0，只加eax即可
+	mov edx, esi; edx 为总内存大小
+	jmp .mem_get_ok
+
+; ------ int 15h,ah=0x88获取内存大小，只能获取64MB之内
+.e801_failed_so_try88:
+	; int 15h后，ax存入的是以KB为单位的内存容量
+	mov ah, 0x88;
+	int 0x15
+	jc .error_hlt
+	and eax, 0x0000FFFF
+	; 16位乘法积为32位，积的高16位在dx中，积的低16位在ax中
+	mov cx, 0x400; 将 ax 转为byte为单位
+	mul cx;
+	shl edx, 16; 把dx移到高16位
+	or edx, eax;
+	add edx, 0x100000; 0x88 子功能只会返回1MB 以上的内存，故实际内存大小要加上1MB
+.error_hlt:
+	jmp $
+.mem_get_ok:
+	mov [total_mem_bytes], edx; 获得了内存容量 b 0xc03
+
+	ret;
 
 [bits 32]
 p_mode_start:
