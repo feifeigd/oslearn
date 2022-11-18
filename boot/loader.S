@@ -28,23 +28,39 @@ VIDEO_DESC:
 GDT_SIZE	equ $ - GDT_BASE
 GDT_LIMIT	equ GDT_SIZE - 1
 ; times 60 dq 0; 此处预留60个描述符的空位
+
+; 物理内存的大小
+; 想办法把这个偏移弄成 0x200
+times (0x200 - ($ - $$)) db 0
+total_mem_bytes dd 0; xp /w 0xb00; 0x900+0x200=0xb00
+
 ; 选择子
 SELECTOR_CODE	equ (CODE_DESC			- GDT_BASE) | TI2_GDT | RPL1_0_0; 相当于 ((CODE_DESC - GDT_BASE) / 8) << 3 + TI2_GDT + RPL1_0_0
 SELECTOR_DATA	equ (DATA_STACK_DESC	- GDT_BASE) | TI2_GDT | RPL1_0_0;
 SELECTOR_VIDEO	equ (VIDEO_DESC			- GDT_BASE) | TI2_GDT | RPL1_0_0;
+
 
 ; gdt 的指针, 前2字节是gdt 界限，后4字节是gdt起始地址
 gdt_ptr:
 	dw GDT_LIMIT
 	dd GDT_BASE
 
+ards_buf:
+BaseAddrLow 	dd 0
+BaseAddrHigh 	dd 0
+LengthLow 		dd 0
+LengthHigh		dd 0
+Type			dd 0
+
+ards_nr dw 0; 用于记录ARDS的结构体数量
+
 loadermsg 		db '2 loader in real.'
 loadermsg_len	equ $ - loadermsg
 
-	; jmp $ ; 不会回来这里了
-
 loader_start:
 	call print
+	call detect_memory
+
 ; ----------------------- 进入保护模式; 
 ; 1 打开A20
 	in al, 0x92
