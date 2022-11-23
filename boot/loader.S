@@ -188,10 +188,35 @@ p_mode_start:
 	MOV gs, ax
 
 	mov byte gs:[0xA0], 'P'	
-	call set_screen
 	
 	; 创建页目录及页表并初始化内存位图
 	call setup_page; b 0x2cd
+
+	; 将描述符表地址及偏移量写入内存 gdt_ptr, 一会儿用新地址重新加载
+	sgdt [gdt_ptr]	; 存到原来 gdt所在的位置
+
+	; 将gdt描述符中视频段描述符中的基地址+0xc0000000
+	mov ebx, [gdt_ptr + 2]
+	or dword[ebx + 8 * 3 + 4], 0xc0000000; 视频段是第3个段描述符，每个描述符8字节，故 0x18。段描述符的高4字节的最高位的段基址的 31~24位
+
+	; 将gdt的基址加上0xc0000000，使其成为内核所在的高地址
+	or dword[gdt_ptr + 2], 0xc0000000
+
+	or esp, 0xc0000000; 将栈指针同样映射为内核地址
+
+	; 把页目录地址赋值给 cr3
+	mov eax, PAGE_DIR_TABLE_POS
+	mov cr3, eax;
+
+	; 打开cr0的page位(第31位)
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax;
+
+	; 开启分页后，用gdt新的地址重新加载
+	lgdt [gdt_ptr]; 重新加载
+	
+	call set_screen
 
 	jmp $
 
