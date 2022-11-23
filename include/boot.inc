@@ -109,8 +109,8 @@ TI2_GDT equ 000b; 在GDT中
 TI2_LDT equ 100b; 在LDT中
 
 ;---------------------------- 页表相关属性
-PAGE_P0		equ 1b; Present
-PAGE_RW1_R	equ 00b; 可读不可写
-PAGE_RW1_W	equ 10b; 可读可写
+PAGE_P0		equ   1b; Present
+PAGE_RW1_R	equ  00b; 可读不可写
+PAGE_RW1_W	equ  10b; 可读可写
 PAGE_US2_S	equ 000b; Supervisor
 PAGE_US2_U	equ 100b; User
