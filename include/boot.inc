@@ -2,8 +2,14 @@
 ;--------------------- loader 和 kernel
 LOADER_BASE_ADDR 	equ 0x900
 LOADER_START_SECTOR equ 0x2; LBA 地址，第2块扇区. 第0个扇区是MBR，第1个扇区空置还没使用
-LOADER_SECTOR_COUNT equ 2; loader的大小占用多少个扇区
+LOADER_SECTOR_COUNT equ 3; loader的大小占用多少个扇区
 
+KERNEL_BIN_BASE_ADDR	equ 0x70000
+KERNEL_START_SECTOR		equ 0x9
+KERNEL_ENTRY_POINT		equ 0xc0001500; kernel入口虚拟地址
+KERNEL_SECTOR_COUNT		equ 18; loader的大小占用多少个扇区
+
+;-------------- 页表配置
 PAGE_DIR_TABLE_POS	equ 0x00100000; 页目录表物理地址， 起始1MB
 
 KB1		equ 0x400; 1KB
