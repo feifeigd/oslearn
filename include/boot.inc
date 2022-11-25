@@ -120,3 +120,6 @@ PAGE_RW1_R	equ  00b; 可读不可写
 PAGE_RW1_W	equ  10b; 可读可写
 PAGE_US2_S	equ 000b; Supervisor
 PAGE_US2_U	equ 100b; User
+
+;------------------- program type 定义
+PT_NULL equ 0

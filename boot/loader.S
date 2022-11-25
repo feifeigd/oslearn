@@ -204,7 +204,7 @@ p_mode_start:
 
 	; 将gdt描述符中视频段描述符中的基地址+0xc0000000
 	mov ebx, [gdt_ptr + 2]
-	or dword[ebx + 8 * 3 + 4], 0xc0000000; 视频段是第3个段描述符，每个描述符8字节，故 0x18。段描述符的高4字节的最高位的段基址的 31~24位
+	or dword[ebx + (VIDEO_DESC - GDT_BASE) + 4], 0xc0000000; 视频段是第3个段描述符，每个描述符8字节，故 8*3+4=0x18。段描述符的高4字节的最高位的段基址的 31~24位
 
 	; 将gdt的基址加上0xc0000000，使其成为内核所在的高地址
 	or dword[gdt_ptr + 2], 0xc0000000
@@ -222,9 +222,9 @@ p_mode_start:
 
 	; 开启分页后，用gdt新的地址重新加载
 	lgdt [gdt_ptr]; 重新加载
-	
-	call set_screen
 
+	call set_screen
+	jmp SELECTOR_CODE: enter_kernel
 	jmp $
 
 ; 操作显卡	
@@ -255,6 +255,15 @@ set_screen:
 
 	ret
 
+show_kernel:
+	mov byte gs:[0x140], 'K';
+	mov byte gs:[0x142], 'E';
+	mov byte gs:[0x144], 'R';
+	mov byte gs:[0x146], 'N';
+	mov byte gs:[0x148], 'E';
+	mov byte gs:[0x14A], 'L';
+
+	ret;
 
 ;-------------------- 创建页目录及页表
 ; 需要物理内存 = 1MB + 2PAGE + 254PAGE=1MB + 256PAGE = 2MB
@@ -372,4 +381,84 @@ rd_disk_m_32:
 	loop .go_on_read
 	
 	ret;
+
+enter_kernel:
+	call show_kernel
+	call kernel_init
+	mov esp, 0xc009f000;
+	jmp KERNEL_ENTRY_POINT;
+	jmp $;
+
+;------------------------- kernel.bin 中的segment拷贝到编译的地址
+; typedef struct elf32_hdr{
+;  unsigned char e_ident[EI_NIDENT];0
+;  Elf32_Half    e_type;0x10
+;  Elf32_Half    e_machine;0x12
+;  Elf32_Word    e_version;0x14
+;  Elf32_Addr    e_entry;0x18  /* Entry point */
+;  Elf32_Off     e_phoff;0x1c
+;  Elf32_Off     e_shoff;0x20
+;  Elf32_Word    e_flags;0x24
+;  Elf32_Half    e_ehsize;0x28
+;  Elf32_Half    e_phentsize;0x2a
+;  Elf32_Half    e_phnum;0x2c
+;  Elf32_Half    e_shentsize;0x2e
+;  Elf32_Half    e_shnum;0x30
+;  Elf32_Half    e_shstrndx;0x32
+;} Elf32_Ehdr;
+
+kernel_init:
+	xor eax, eax;
+	xor ebx, ebx; 记录程序头表地址
+	xor ecx, ecx; 记录程序头表中的program header数量
+	xor edx, edx; 记录program header 尺寸，即 e_phentsize
+
+	mov ebx, [KERNEL_BIN_BASE_ADDR + 0x1c]; e_phoff
+	add ebx, KERNEL_BIN_BASE_ADDR;
+	mov cx, [KERNEL_BIN_BASE_ADDR + 0x2c]; e_phnum
+	mov dx, [KERNEL_BIN_BASE_ADDR + 0x2a]; e_phentsize
+
+; typedef struct elf32_phdr{
+;  Elf32_Word    p_type; 0x0
+;  Elf32_Off     p_offset;0x4
+;  Elf32_Addr    p_vaddr;0x8
+;  Elf32_Addr    p_paddr;0xc
+;  Elf32_Word    p_filesz;0x10
+;  Elf32_Word    p_memsz;
+;  Elf32_Word    p_flags;
+;  Elf32_Word    p_align;
+;} Elf32_Phdr;
+.each_segment:
+	cmp byte[ebx + 0], PT_NULL; 若  p_type = PT_NULL,说明此program header 未使用
+	je .PTNULL
+
+	; memcpy(dst, src, size)
+	push dword [ebx + 0x10]; p_filesz
+	mov eax, [ebx + 0x4];p_offset
+	add eax, KERNEL_BIN_BASE_ADDR;
+	push eax
+	push dword[ebx + 0x8]; p_vaddr, 目的虚拟地址
+	call mem_cpy
+	add esp, 0xc; 清理栈中压入的三个参数
+.PTNULL
+	add ebx, edx; 指向下一个 program header 
+	loop .each_segment
+	ret;
+
+; 内存拷贝
+mem_cpy:
+	cld;
+	push ebp
+	mov ebp, esp;
+	push ecx;
+
+	mov edi, [ebp + 8]; dst
+	mov esi, [ebp + 0xc]; src
+	mov ecx, [ebp + 0x10]; size
+	rep movsb; 逐字节拷贝
+
+	pop ecx;
+	pop ebp;
+	ret;
+
 [bits 64]
