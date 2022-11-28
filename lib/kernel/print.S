@@ -10,7 +10,7 @@ section .text
 ; 功能描述：把栈中的一个字符写入光标处
 ;-----------------------------------
 global put_char
-put_char:
+put_char: ; b 0x1580
     pushad  ; 备份32位寄存器
 
     mov ax, SELECTOR_VIDEO;
@@ -45,7 +45,7 @@ put_char:
     cmp cl, 0xa;
     jz .is_line_feed
 
-    cmp cl, 0x8; BS(backspace)的asc码是8
+    cmp cl, 0x8; BS(backspace)的asc码是8 b 0x15b2
     jz .is_backspace
     jmp .put_other;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -98,7 +98,7 @@ put_char:
     mov ecx, 960; 2000 - 80 = 1920个字符要搬运，共1920 * 2 = 3840 字节, 一次性搬4字节，共3840/4=960次
 
     mov esi, 0xc00b80a0; 第1行行首
-    mov esi, 0xc00b8000; 第0行行首
+    mov edi, 0xc00b8000; 第0行行首
     rep movsd
 
 ;;;;;;; 将最后一行填充为空白
