@@ -9,7 +9,7 @@ section .text
 ;----------------- put_char
 ; 功能描述：把栈中的一个字符写入光标处
 ;-----------------------------------
-global put_char
+global put_char, put_str
 put_char: ; b 0x1580
     pushad  ; 备份32位寄存器
 
@@ -131,4 +131,24 @@ put_char: ; b 0x1580
 .put_char_done:
 
     popad;
+    ret;
+
+; 打印字符串
+put_str:
+    push ebx;
+    push ecx;
+    xor ecx, ecx;
+    mov ebx, [esp + 12]; 字符串地址
+.goon:
+    mov cl, [ebx];
+    cmp cl, 0
+    jz .str_over
+    push ecx;
+    call put_char;
+    add esp, 4;
+    inc ebx;
+    jmp .goon;
+.str_over:
+    pop ecx;
+    pop ebx;
     ret;

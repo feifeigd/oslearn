@@ -42,5 +42,6 @@ echo 写入LOADER
 dd if=bin/loader.bin of=hd60M.img bs=512 count=3  seek=2 conv=notrunc
 
 echo 写入 kernel
-dd if=bin/kernel.bin of=hd60M.img bs=512 count=200  seek=9 conv=notrunc
+make
+# dd if=bin/kernel.bin of=hd60M.img bs=512 count=200  seek=9 conv=notrunc
 
