@@ -5,11 +5,14 @@ RPL1_0_0    equ 0
 SELECTOR_VIDEO equ (3 << 3) | TI2_GDT | RPL1_0_0
 
 [bits 32]
+section .data
+put_int_buffer dq 0; 定义8字节缓冲区用于数字到字符的转换
+
 section .text
 ;----------------- put_char
 ; 功能描述：把栈中的一个字符写入光标处
 ;-----------------------------------
-global put_char, put_str
+global put_char, put_str, put_int
 put_char: ; b 0x1580
     pushad  ; 备份32位寄存器
 
@@ -151,4 +154,57 @@ put_str:
 .str_over:
     pop ecx;
     pop ebx;
+    ret;
+
+put_int:
+    pushad
+    mov ebp, esp;
+    mov eax, [ebp + 4*9];call 的返回地址占4字节，+pushad的8个4字节
+    mov edx, eax;
+    mov edi, 7; 指定在put_int_buffer 中初始的偏移量
+    mov ecx, 8; 32位数字中，十六进制数字的位数是8个
+    mov ebx, put_int_buffer;
+; 将32位数字按照十六进制的形式从低位到高位逐个处理
+; 共处理8个十六进制数字
+.16based_4bits:
+    and edx, 0x0000000F;
+    cmp edx, 9; 数字0~9和 a~f 需要分别处理成对应的字符
+    jg .is_A2F;
+    add edx, '0';
+    jmp .store;
+.is_A2F:
+    ; sub edx, 10;
+    add edx, 'A' - 10;
+.store:
+    mov [ebx + edi], dl; 
+    dec edi;
+    shr eax, 4;
+    mov edx, eax;
+    loop .16based_4bits;
+; 现在put_int_buffer 中已全是字符，打印之前，把高位连续的字符去掉，比如把字符 000123 编程123
+.ready_to_print:
+    inc edi; 此时edi退减为 -1(0xFFFFFFFF), 加一使其为0
+.skip_prefix_0:
+    cmp edi, 8;
+
+    je .full0
+; 找出连续的0字符，edi作为非0的最高字符的偏移
+.go_on_skip:
+    mov cl, [put_int_buffer + edi];
+    inc edi;
+    cmp cl, '0'
+    je .skip_prefix_0
+    dec edi;
+    jmp .put_each_num;
+.full0:
+    mov cl, '0';
+.put_each_num:
+    push ecx;   cl为可打印的字符
+    call put_char;
+    add esp, 4;
+    inc edi; 使edi指向下一个字符
+    mov cl, [put_int_buffer + edi];
+    cmp edi, 8;
+    jl .put_each_num
+    popad
     ret;

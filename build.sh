@@ -33,7 +33,7 @@ build "Release"
 
 echo 'success';
 echo '编译内核'
-gcc -m32 -c kernel/main.c && ld -m elf_i386 main.o -Ttext 0xc0001500 -e main -o bin/kernel.bin
+#gcc -m32 -c kernel/main.c && ld -m elf_i386 main.o -Ttext 0xc0001500 -e main -o bin/kernel.bin
 
 echo 写入MBR
 dd if=bin/mbr.bin of=hd60M.img bs=512 count=1 conv=notrunc
