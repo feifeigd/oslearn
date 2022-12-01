@@ -3,6 +3,7 @@
 
 %define ERROR_CODE 	nop
 %define ZERO 		push 0
+%define EOI 		0x20
 extern put_str; 
 
 section .data
@@ -13,9 +14,20 @@ global intr_entry_table
 %macro VECTOR 2
 section .text
 intr%1entry:	; 每个中断处理程序都要压入中断向量号，所以一个中断类型一个中断处理程序
-	%2
+	%2; 中断若有错误码，会压在 eip 后面
 	push intr_str;
 	call put_str;
+	add esp, 4; 跳过参数
+
+	; 如果是从片上进入的中断，除了往从片上发送EOI外，还要往主片上发送 EOI;
+	mov al, EOI;  中断结束命令EOI，手动结束中断
+	out 0xa0, al; 往从片发送, OCW2
+	out 0x20, al; 往主片发送, 为了让8259A接受新的中断，必须要让8259A知道当前中断处理程序已经执行完成
+
+	add esp, 4; 跨过 error_code 
+	iret; 从中断返回，32 位下等同指令 iretd;
+section .data
+	dd intr%1entry; 存储各个中断入口程序的地址，形成intr_entry_table数组
 %endmacro
 
 intr_entry_table:
@@ -27,29 +39,45 @@ intr_entry_table:
 	VECTOR 0x05, ZERO
 	VECTOR 0x06, ZERO
 	VECTOR 0x07, ZERO
-	VECTOR 0x08, ZERO
+	VECTOR 0x08, ERROR_CODE
 	VECTOR 0x09, ZERO
-	VECTOR 0x0A, ZERO
-	VECTOR 0x0B, ZERO
+	VECTOR 0x0A, ERROR_CODE
+	VECTOR 0x0B, ERROR_CODE
 	VECTOR 0x0C, ZERO
-	VECTOR 0x0D, ZERO
-	VECTOR 0x0E, ZERO
+	VECTOR 0x0D, ERROR_CODE
+	VECTOR 0x0E, ERROR_CODE
 	VECTOR 0x0F, ZERO
 	
 	VECTOR 0x10, ZERO
-	VECTOR 0x11, ZERO
+	VECTOR 0x11, ERROR_CODE
 	VECTOR 0x12, ZERO
 	VECTOR 0x13, ZERO
 	VECTOR 0x14, ZERO
 	VECTOR 0x15, ZERO
 	VECTOR 0x16, ZERO
 	VECTOR 0x17, ZERO
-	VECTOR 0x18, ZERO
+	VECTOR 0x18, ERROR_CODE
 	VECTOR 0x19, ZERO
-	VECTOR 0x1A, ZERO
-	VECTOR 0x1B, ZERO
+	VECTOR 0x1A, ERROR_CODE
+	VECTOR 0x1B, ERROR_CODE
 	VECTOR 0x1C, ZERO
-	VECTOR 0x1D, ZERO
+	VECTOR 0x1D, ERROR_CODE
 	VECTOR 0x1E, ERROR_CODE
 	VECTOR 0x1F, ZERO
-	VECTOR 0x20, ZERO
+
+	VECTOR 0x20, ZERO; 时钟中断对应的入口
+	VECTOR 0x21, ZERO; 键盘中断对应的入口
+	VECTOR 0x22, ZERO; 级联用
+	VECTOR 0x23, ZERO; 串口2对应的入口
+	VECTOR 0x24, ZERO; 串口1对应的入口
+	VECTOR 0x25, ZERO; 并口2对应的入口
+	VECTOR 0x26, ZERO; 软盘对应的入口
+	VECTOR 0x27, ZERO; 并口1对应的入口
+	VECTOR 0x28, ZERO; 实时时钟对应的入口
+	VECTOR 0x29, ZERO; 重定向
+	VECTOR 0x2A, ZERO; 保留
+	VECTOR 0x2B, ZERO; 保留
+	VECTOR 0x2C, ZERO; ps/2 鼠标
+	VECTOR 0x2D, ZERO; fpu 浮点单元异常
+	VECTOR 0x2E, ZERO; 硬盘
+	VECTOR 0x2F, ZERO; 保留

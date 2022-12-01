@@ -1,4 +1,6 @@
 #include "init.h"
+#include "interrupt.h"
+
 #include <print.h>
 
 // 负责初始化所有模块

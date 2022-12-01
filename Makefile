@@ -13,13 +13,13 @@ LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/init.o		\
-	$(BUILD_DIR)/interrupt.o		\
+	$(BUILD_DIR)/interrupt.o\
 	$(BUILD_DIR)/kernel.o	\
 	$(BUILD_DIR)/print.o
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	echo 写入内核
-	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=22 seek=9 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=25 seek=9 conv=notrunc
 
 # 汇编代码
 $(BUILD_DIR)/print.o: lib/kernel/print.S
@@ -32,10 +32,15 @@ $(BUILD_DIR)/kernel.o: kernel/kernel.S
 $(BUILD_DIR)/main.o: kernel/main.c
 	$(CC) $(CFLAGS) $< -o $@
 
+kernel/global.h: lib/stdint.h
+	echo kernel/global.h 更新了
+
 kernel/init.h:
 	echo kernel/init.h 更新了
 kernel/interrupt.h: lib/stdint.h
 	echo kernel/interrupt.h 更新了
+lib/kernel/io.h: lib/kernel/print.h
+	echo kernel/io.h 更新了
 
 kernel/print.h:
 	echo kernel/print.h 更新了
@@ -48,10 +53,10 @@ lib/kernel/print.h:
 lib/stdint.h:
 	echo lib/stdint.h 更新了
 
-$(BUILD_DIR)/init.o: kernel/init.c kernel/init.h kernel/print.h
+$(BUILD_DIR)/init.o: kernel/init.c kernel/init.h kernel/interrupt.h kernel/print.h
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/interrupt.o: kernel/interrupt.c kernel/interrupt.h
+$(BUILD_DIR)/interrupt.o: kernel/interrupt.c kernel/global.h kernel/interrupt.h lib/kernel/io.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ########## 链接所有目标
