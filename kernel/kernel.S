@@ -5,6 +5,7 @@
 %define ZERO 		push 0
 %define EOI 		0x20
 extern put_str; 
+extern idt_table;
 
 section .data
 intr_str db "interrupt occour!", 0xa, 0
@@ -15,16 +16,34 @@ global intr_entry_table
 section .text
 intr%1entry:	; 每个中断处理程序都要压入中断向量号，所以一个中断类型一个中断处理程序
 	%2; 中断若有错误码，会压在 eip 后面
-	push intr_str;
-	call put_str;
-	add esp, 4; 跳过参数
+	; 保存上下文环境
+	push ds;
+	push es;
+	push fs;
+	push gs;
+	pushad;
+
+	;push intr_str;
+	;call put_str;
+	;add esp, 4; 跳过参数
 
 	; 如果是从片上进入的中断，除了往从片上发送EOI外，还要往主片上发送 EOI;
 	mov al, EOI;  中断结束命令EOI，手动结束中断
 	out 0xa0, al; 往从片发送, OCW2
 	out 0x20, al; 往主片发送, 为了让8259A接受新的中断，必须要让8259A知道当前中断处理程序已经执行完成
 
-	add esp, 4; 跨过 error_code 
+	push %1;
+	call [idt_table + %1 * 4];	// 调C实现的中断处理函数
+
+	add esp, 4; 跳过终端号
+
+	popad
+	pop gs;
+	pop fs;
+	pop es;
+	pop ds
+	add esp, 4; 跨过 error_code
+	;hlt; debug
 	iret; 从中断返回，32 位下等同指令 iretd;
 section .data
 	dd intr%1entry; 存储各个中断入口程序的地址，形成intr_entry_table数组
