@@ -15,18 +15,6 @@ endif()
 
 include(CMakePrintHelpers)	# cmake_print_variables
 
-
-# set(CMAKE_ASM_NASM_OBJECT_FORMAT bin)
-
-#set(CMAKE_ASM_NASM_FLAGS "-e") # 
-
-# set(CMAKE_ASM_NASM_LINK_EXECUTABLE "nasm <OBJECT> -o <TARGET> <LINK_LIBRARIES>")
-# set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <FLAGS> <CMAKE_ASM_NASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_NASM_LINK_EXECUTABLE "ld <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-
-enable_language(ASM_NASM)
-# set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS asm nasm S)
-
 include_directories(include)
 # add_compile_definitions(-I ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 # 输出路径

@@ -4,7 +4,7 @@ LOADER_STACK_TOP equ LOADER_BASE_ADDR
 
 [bits 16]
 ; loader 的大小，不能超过64KB，因为实模式下偏移地址是16位，只能访问 0~FFFFh
-section loader vstart=LOADER_BASE_ADDR
+section loader vstart=LOADER_BASE_ADDR ; b 0x900
 	jmp loader_start;
 	
 
@@ -224,7 +224,7 @@ p_mode_start:
 	lgdt [gdt_ptr]; 重新加载
 
 	call set_screen
-	jmp SELECTOR_CODE: enter_kernel
+	jmp SELECTOR_CODE: enter_kernel; b 0xc7f
 	jmp $
 
 ; 操作显卡	
@@ -384,9 +384,9 @@ rd_disk_m_32:
 
 enter_kernel:
 	call show_kernel
-	call kernel_init
+	call kernel_init; b 0xe0a
 	mov esp, 0xc009f000;
-	jmp KERNEL_ENTRY_POINT;
+	jmp KERNEL_ENTRY_POINT; b 0xe14
 	jmp $;
 
 ;------------------------- kernel.bin 中的segment拷贝到编译的地址
@@ -438,7 +438,7 @@ kernel_init:
 	add eax, KERNEL_BIN_BASE_ADDR;
 	push eax
 	push dword[ebx + 0x8]; p_vaddr, 目的虚拟地址
-	call mem_cpy
+	call mem_cpy; b 0xe51
 	add esp, 0xc; 清理栈中压入的三个参数
 .PTNULL
 	add ebx, edx; 指向下一个 program header 
@@ -452,7 +452,7 @@ mem_cpy:
 	mov ebp, esp;
 	push ecx;
 
-	mov edi, [ebp + 8]; dst
+	mov edi, [ebp + 8]; dst = 08048000
 	mov esi, [ebp + 0xc]; src
 	mov ecx, [ebp + 0x10]; size
 	rep movsb; 逐字节拷贝
