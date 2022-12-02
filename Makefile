@@ -11,11 +11,12 @@ LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 
-HEADERS = device/timer.h 								\
-	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h 	\
-	lib/kernel/io.h										\
-	lib/kernel/print.h									\
-	lib/stdint.h
+HEADERS = device/timer.h 											\
+	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	\
+	lib/kernel/io.h													\
+	lib/kernel/print.h												\
+	lib/stdint.h													\
+	lib/string.h
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/debug.o	\
@@ -23,11 +24,12 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/interrupt.o\
 	$(BUILD_DIR)/kernel.o	\
 	$(BUILD_DIR)/print.o	\
+	$(BUILD_DIR)/string.o	\
 	$(BUILD_DIR)/timer.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	@echo 写入内核
-	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=33 seek=9 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=34 seek=9 conv=notrunc
 
 # 汇编代码
 $(BUILD_DIR)/print.o: lib/kernel/print.S
@@ -48,6 +50,8 @@ $(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
 $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/string.o: lib/string.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 ########## 链接所有目标
