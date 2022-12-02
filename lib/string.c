@@ -12,14 +12,14 @@ void memcpy(void* dst, const void* src, uint32_t size){
     ASSERT(dst);
     ASSERT(src);
     char* p_dst = dst;
-    char* p_src = src;
+    char const* p_src = src;
     while(size-- > 0)*p_dst++ = *p_src++;
 }
 
 int memcmp(const void* a, const void* b, uint32_t size){
     ASSERT(a);ASSERT(b);
-    char* pa = a;
-    char* pb = b;
+    char const* pa = a;
+    char const* pb = b;
     while(size-- > 0){
         if(*pa > *pb)
             return 1;
@@ -59,7 +59,7 @@ char* strchr(const char* str, const uint8_t ch){
     ASSERT(str);
     while(*str){
         if(*str++ == ch)
-            return --str;
+            return (char*)--str;
     }
     return NULL;
 }
