@@ -6,16 +6,23 @@ ENTRY_POINT = 0xc0001500
 
 AS = nasm
 ASFLAGS = -f elf
-LIB = -I kernel/ -I lib/kernel
+LIB = -I kernel/ -I lib/ -I lib/kernel
 
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
+
+HEADERS = device/timer.h 								\
+	kernel/global.h kernel/init.h kernel/interrupt.h 	\
+	lib/kernel/io.h										\
+	lib/kernel/print.h									\
+	lib/stdint.h
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/init.o		\
 	$(BUILD_DIR)/interrupt.o\
 	$(BUILD_DIR)/kernel.o	\
-	$(BUILD_DIR)/print.o
+	$(BUILD_DIR)/print.o	\
+	$(BUILD_DIR)/timer.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	echo 写入内核
@@ -29,34 +36,15 @@ $(BUILD_DIR)/kernel.o: kernel/kernel.S
 
 
 # C 代码编译
-$(BUILD_DIR)/main.o: kernel/main.c
+$(BUILD_DIR)/main.o: kernel/main.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
-kernel/global.h: lib/stdint.h
-	echo kernel/global.h 更新了
-
-kernel/init.h:
-	echo kernel/init.h 更新了
-kernel/interrupt.h: lib/stdint.h
-	echo kernel/interrupt.h 更新了
-lib/kernel/io.h: lib/kernel/print.h
-	echo kernel/io.h 更新了
-
-kernel/print.h:
-	echo kernel/print.h 更新了
-kernel/init.h: kernel/print.h
-	echo kernel/init.h: kernel/print.h
-
-lib/kernel/print.h:
-	echo lib/kernel/print.h 更新了
-
-lib/stdint.h:
-	echo lib/stdint.h 更新了
-
-$(BUILD_DIR)/init.o: kernel/init.c kernel/init.h kernel/interrupt.h kernel/print.h
+$(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/interrupt.o: kernel/interrupt.c kernel/global.h kernel/interrupt.h lib/kernel/io.h
+$(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 ########## 链接所有目标
