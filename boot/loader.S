@@ -291,7 +291,7 @@ setup_page:	; b 0xca8
 	; 也就是页表的 0xc0000000 ~ 0xffffffff 共计1G属于内核
 	; 0x0 ~ 0xbfffffff 共计3G属于用户进程
 	; sub eax, PAGE1
-	mov eax, PAGE_DIR_TABLE_POS
+	mov eax, PAGE_DIR_TABLE_POS | PAGE_US2_U | PAGE_RW1_W | PAGE_P0;
 	mov [PAGE_DIR_TABLE_POS + PAGE1 - 4], eax; 使最后一个目录项指向页目录表自己的地址
 
 ; 下面创建页表项(PTE)

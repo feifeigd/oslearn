@@ -1,6 +1,8 @@
+#include "debug.h"
 #include "memory.h"
 #include <print.h>
 #include <stdint.h>
+#include <string.h>
 
 #define PG_SIZE 4096
 
@@ -13,6 +15,9 @@
 // 0xc0000000 是内核从虚拟地址3G起
 // 0x100000 意指跨过低端 1MB 内存，使虚拟地址在逻辑上连续
 #define K_HEAP_START 0xc0100000
+
+#define PDE_IDX(addr) (((addr) & 0xffc00000) >> 22) // 高10位
+#define PTE_IDX(addr) (((addr) & 0x003ff000) >> 12) // 中10位
 
 // 内存池结构，生成两个实例用于管理内核内存池和用户内存池
 struct pool{
@@ -110,9 +115,27 @@ static void mem_pool_init(uint32_t all_mem){
     put_str("        mem_pool_init done\n");
 }
 
+// 分配pg_cnt个虚拟页
+static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt){
+    int vaddr_start = 0, bit_idx_start = -1;
+    uint32_t cnt = 0;
+    if(PF_KERNEL == pf){
+        bit_idx_start = bitmap_scan(&kernel_vaddr.vaddr_bitmap, pg_cnt);
+        if(-1 == bit_idx_start)
+            return NULL;
+        while (cnt < pg_cnt)
+            bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 1);
+        vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
+    }else{
+        // 用户内存池，将来实现用户进程再补充
+    }
+    return (void*)vaddr_start;
+}
+
 void mem_init(void){
     put_str("    mem_init start \n");
     uint32_t mem_bytes_total = *(uint32_t*)0xb00;   // loader 里面获取
     mem_pool_init(mem_bytes_total); // 初始化内存池
     put_str("    mem_init done \n");
 }
+
