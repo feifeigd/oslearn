@@ -385,7 +385,7 @@ rd_disk_m_32:
 enter_kernel:
 	call show_kernel
 	call kernel_init; b 0xe0a
-	mov esp, 0xc009f000;
+	mov esp, 0xc009f000; 内核主线程的栈
 	jmp KERNEL_ENTRY_POINT; b 0xe14
 	jmp $;
 

@@ -12,7 +12,7 @@ CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prot
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 
 HEADERS = device/timer.h 											\
-	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	\
+	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	kernel/memory.h	\
 	lib/kernel/bitmap.h												\
 	lib/kernel/io.h													\
 	lib/kernel/print.h												\
@@ -25,6 +25,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/init.o		\
 	$(BUILD_DIR)/interrupt.o\
 	$(BUILD_DIR)/kernel.o	\
+	$(BUILD_DIR)/memory.o	\
 	$(BUILD_DIR)/print.o	\
 	$(BUILD_DIR)/string.o	\
 	$(BUILD_DIR)/timer.o	
@@ -52,6 +53,8 @@ $(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/memory.o: kernel/memory.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
