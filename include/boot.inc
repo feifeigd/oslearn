@@ -7,7 +7,7 @@ LOADER_SECTOR_COUNT equ 3; loader的大小占用多少个扇区
 KERNEL_BIN_BASE_ADDR	equ 0x70000
 KERNEL_START_SECTOR		equ 0x9
 KERNEL_ENTRY_POINT		equ 0xc0001500; kernel入口虚拟地址
-KERNEL_SECTOR_COUNT		equ 42; loader的大小占用多少个扇区
+KERNEL_SECTOR_COUNT		equ 44; loader的大小占用多少个扇区
 
 ;-------------- 页表配置
 PAGE_DIR_TABLE_POS	equ 0x00100000; 页目录表物理地址， 起始1MB
@@ -116,10 +116,13 @@ TI2_LDT equ 100b; 在LDT中
 
 ;---------------------------- 页表相关属性
 PAGE_P0		equ   1b; Present
+PG_P equ PAGE_P0
 PAGE_RW1_R	equ  00b; 可读不可写
 PAGE_RW1_W	equ  10b; 可读可写
+PG_RW_W equ PAGE_RW1_W
 PAGE_US2_S	equ 000b; Supervisor
 PAGE_US2_U	equ 100b; User
+PG_US_U equ PAGE_US2_U
 
 ;------------------- program type 定义
 PT_NULL equ 0
