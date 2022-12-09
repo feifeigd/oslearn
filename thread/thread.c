@@ -21,7 +21,7 @@ void thread_create(struct task_struct* pthread, thread_func function, void* func
     kthread_stack->eip = kernel_thread;
     kthread_stack->function = function;
     kthread_stack->func_arg = func_arg;
-    // 全部赋值 0
+    // 全部赋值 0,因为线程尚未执行
     kthread_stack->ebp = kthread_stack->ebx = kthread_stack->esi = kthread_stack->edi = 0;
 }
 
@@ -43,6 +43,7 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     struct task_struct* thread = get_kernel_pages(1);
 
     init_thread(thread, name, prio);
-    asm volatile("mov %0, %%esp;pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret"::"g"(thread->self_kstack): "memory");
+    thread_create(thread, function, func_arg);
+    asm volatile("movl %0, %%esp;pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret"::"g"(thread->self_kstack): "memory");
     return thread;
 }
