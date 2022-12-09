@@ -17,7 +17,8 @@ HEADERS = device/timer.h 											\
 	lib/kernel/io.h													\
 	lib/kernel/print.h												\
 	lib/stdint.h													\
-	lib/string.h
+	lib/string.h													\
+	thread/thread.h
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/bitmap.o	\
@@ -28,6 +29,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/memory.o	\
 	$(BUILD_DIR)/print.o	\
 	$(BUILD_DIR)/string.o	\
+	$(BUILD_DIR)/thread.o	\
 	$(BUILD_DIR)/timer.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
@@ -57,6 +59,8 @@ $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
 $(BUILD_DIR)/memory.o: kernel/memory.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/thread.o: thread/thread.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/string.o: lib/string.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
