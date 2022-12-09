@@ -3,8 +3,17 @@
 #include <global.h>
 #include <string.h>
 
+struct task_struct* main_thread;
+struct list thread_ready_list;
+struct list thread_all_list;
+static struct list_elem* thread_tag; // 用于保存队列中的线程结点
+extern void switch_to(struct task_struct* cur, struct task_struct* next);
+
 // 由 kernel_thread 去执行 function(func_arg)
 static void kernel_thread(thread_func* function, void* func_arg){
+    // 开中断，避免后面的时钟中断被屏蔽，而无法调度其他线程
+    intr_enable();
+
     function(func_arg);
 }
 
@@ -29,8 +38,12 @@ void thread_create(struct task_struct* pthread, thread_func function, void* func
 void init_thread(struct task_struct* pthread, char* name, int prio){
     memset(pthread, 0, sizeof(*pthread));
     strcpy(pthread->name, name);
-    pthread->status = TASK_RUNNING;
-    pthread->priority = prio;
+
+    pthread->status = pthread == main_thread ? TASK_RUNNING : TASK_READY;   // 由于把main函数也封装成一个线程，并且它一直是运行的
+
+    pthread->priority = pthread->ticks = prio;
+    pthread->elapsed_ticks = 0;
+    pthread->pgdir = NULL;
     // self_kstack 是线程自己栈内核态下使用的栈顶地址
     pthread->self_kstack = (uint32_t*)((uint32_t)pthread + PG_SIZE);
     pthread->stack_magic = 0x19851122; // 自定义魔数
@@ -44,6 +57,36 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
 
     init_thread(thread, name, prio);
     thread_create(thread, function, func_arg);
+
+    ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
+    // 加入就绪队列
+    list_append(&thread_ready_list, &thread->general_tag);
+
+    ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
+    // 加入全部线程队列
+    list_append(&thread_all_list, &thread->all_list_tag);
+
     asm volatile("movl %0, %%esp;pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret"::"g"(thread->self_kstack): "memory");
     return thread;
+}
+
+// 获取当前线程pcb指针
+struct task_struct* running_thread(){
+    uint32_t esp;
+    asm ("mov %%esp, %0":"=g"(esp));
+    // 取esp整数部分，即pcb起始地址
+    return (struct task_struct*)(esp & 0xfffff000);
+}
+
+// 将kernel中的main函数完善为主线程
+static void make_main_thread(void){
+    // 因为main线程早已运行
+    // 咱们中loader.S 中进入内核时的 mov esp, 0xc009f000
+    // 就是为其保留pcb的，因此pcb地址为 0xc009e000
+    // 不需要通过get_kernel_page另分配一页
+    main_thread = running_thread();
+    init_thread(main_thread, "main", 31);
+
+    ASSERT(!elem_find(&thread_all_list, &main_thread->all_list_tag));
+    list_append(&thread_all_list, &main_thread->all_list_tag)
 }
