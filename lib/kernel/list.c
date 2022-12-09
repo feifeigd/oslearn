@@ -1,7 +1,7 @@
 #include "list.h"
 #include <interrupt.h>
 
-void list_init(struct list*){
+void list_init(struct list* list){
     list->head.prev = NULL;
     list->head.next = &list->tail;
     list->tail.prev = &list->head;
@@ -29,7 +29,7 @@ void list_push(struct list* plist, struct list_elem* elem){
 
 // 添加元素到队尾
 void list_append(struct list* plist, struct list_elem* elem){
-    list_insert_before(&list->tail, elem);
+    list_insert_before(&plist->tail, elem);
 }
 
 void list_iterate(struct list* plist);
