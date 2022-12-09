@@ -80,3 +80,5 @@ struct task_struct
     char name[16];
     uint32_t stack_magic;   // 栈的边界标记，用于检测栈的溢出
 };
+
+struct task_struct* thread_star(char* name, int prio, thread_func function, void* func_arg);

@@ -15,6 +15,7 @@ HEADERS = device/timer.h 											\
 	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	kernel/memory.h	\
 	lib/kernel/bitmap.h												\
 	lib/kernel/io.h													\
+	lib/kernel/list.h												\
 	lib/kernel/print.h												\
 	lib/stdint.h													\
 	lib/string.h													\
@@ -25,6 +26,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/debug.o	\
 	$(BUILD_DIR)/init.o		\
 	$(BUILD_DIR)/interrupt.o\
+	$(BUILD_DIR)/list.o		\
 	$(BUILD_DIR)/kernel.o	\
 	$(BUILD_DIR)/memory.o	\
 	$(BUILD_DIR)/print.o	\
@@ -55,6 +57,8 @@ $(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/list.o: lib/kernel/list.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/memory.o: kernel/memory.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
