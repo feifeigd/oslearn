@@ -17,7 +17,7 @@ void thread_create(struct task_struct* pthread, thread_func function, void* func
 
     // 再留出线程栈空间
     pthread->self_kstack -= sizeof(struct thread_stack);
-    struct thread_task* kthread_stack = (struct thread_task*)pthread->self_kstack;
+    struct thread_stack* kthread_stack = (struct thread_stack*)pthread->self_kstack;
     kthread_stack->eip = kernel_thread;
     kthread_stack->function = function;
     kthread_stack->func_arg = func_arg;
