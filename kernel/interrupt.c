@@ -79,9 +79,28 @@ static void idt_desc_init(void){
 static void general_intr_handler(uint8_t vec_nr){
     if (0x27 == vec_nr || 0x2f == vec_nr)   // 0x2f 是从片8259A上的最后一个irq引脚，保留
         return; // IRQ7 和 IRQ15 会产生伪中断(spurious interrupt), 无须处理
+    // 将光标置为0，从屏幕左上角清出一片打印异常信息的区域，方便阅读
+    
+    int cursor_pos = 0;
+    while(cursor_pos < 320){    // 4行
+        put_char(' ');
+        ++cursor_pos;
+    }
+    set_cursor(0);
+    put_str("!!!!!! exception message begin !!!!!!\n");
+    set_cursor(88); // 第二行第8个字符
+    put_str(intr_name[vec_nr]);
+    if (14 == vec_nr)   // PageFault
+    {
+        int page_fault_vaddr = 0;
+        asm("movl %%cr2, %0":"=r"(page_fault_vaddr));
+        put_str("\npage fault addr is ");put_int(page_fault_vaddr);
+    }
+    put_str("!!!!!! exception message end !!!!!!\n");
     put_str("int vector: 0x");
     put_int(vec_nr);
     put_char('\n');    
+    while(true); // 
 }
 
 // 完成一般中断处理函数注册及异常名称注册
@@ -158,4 +177,8 @@ enum intr_status intr_disable(void){
     }
     old_status = INTR_OFF;
     return old_status;
+}
+
+void register_handler(uint8_t vector_no, intr_handler function){
+    idt_table[vector_no] = function;
 }

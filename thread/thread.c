@@ -90,3 +90,37 @@ static void make_main_thread(void){
     ASSERT(!elem_find(&thread_all_list, &main_thread->all_list_tag));
     list_append(&thread_all_list, &main_thread->all_list_tag)
 }
+
+// 实现任务调度
+void schedule(){
+    ASSERT(INTR_OFF == intr_get_status());
+    struct task_struct* cur = running_thread();
+    if(TASK_RUNNING == cur->status){
+        // 若此线程只是cpu时间片到了，将其加入到就绪队列
+        ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+        list_append(&thread_ready_list, &cur->general_tag);
+        cur->ticks = cur->priority;
+        cur->status = TASK_READY;
+    }else{
+
+    }
+
+    ASSERT(!list_empty(&thread_ready_list));    // 就绪队列为空，可能要做另外的逻辑
+    thread_tag = list_pop(&thread_ready_list);
+    struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
+    next->status = TASK_RUNNING;
+    switch_to(cur, next);
+}
+
+// 初始化线程环境
+void thread_init(void){
+    put_str("thread_init start\n");
+
+    list_init(&thread_ready_list);
+    list_init(&thread_all_list);
+    
+    // 将当前main函数创建为线程
+    make_main_thread();
+
+    put_str("thread_init start\n");
+}
