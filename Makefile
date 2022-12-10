@@ -6,7 +6,7 @@ ENTRY_POINT = 0xc0001500
 
 AS = nasm
 ASFLAGS = -f elf
-LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel
+LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I thread
 
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
@@ -31,17 +31,20 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/memory.o	\
 	$(BUILD_DIR)/print.o	\
 	$(BUILD_DIR)/string.o	\
+	$(BUILD_DIR)/switch.o	\
 	$(BUILD_DIR)/thread.o	\
 	$(BUILD_DIR)/timer.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	@echo 写入内核
-	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=44 seek=9 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=54 seek=9 conv=notrunc
 
 # 汇编代码
 $(BUILD_DIR)/print.o: lib/kernel/print.S
 	$(AS) $(ASFLAGS) $< -o $@
 $(BUILD_DIR)/kernel.o: kernel/kernel.S
+	$(AS) $(ASFLAGS) $< -o $@
+$(BUILD_DIR)/switch.o: thread/switch.S
 	$(AS) $(ASFLAGS) $< -o $@
 
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list.h>
 #include <stdint.h>
 
 typedef void thread_func(void*);
@@ -87,3 +88,6 @@ struct task_struct
 };
 
 struct task_struct* thread_star(char* name, int prio, thread_func function, void* func_arg);
+struct task_struct* running_thread();
+void schedule(void);
+void thread_init();

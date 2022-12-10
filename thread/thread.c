@@ -1,6 +1,8 @@
 
 #include "thread.h"
+#include <debug.h>
 #include <global.h>
+#include <interrupt.h>
 #include <string.h>
 
 struct task_struct* main_thread;
@@ -66,7 +68,7 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     // 加入全部线程队列
     list_append(&thread_all_list, &thread->all_list_tag);
 
-    asm volatile("movl %0, %%esp;pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret"::"g"(thread->self_kstack): "memory");
+    // asm volatile("movl %0, %%esp;pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret"::"g"(thread->self_kstack): "memory");
     return thread;
 }
 
@@ -88,7 +90,7 @@ static void make_main_thread(void){
     init_thread(main_thread, "main", 31);
 
     ASSERT(!elem_find(&thread_all_list, &main_thread->all_list_tag));
-    list_append(&thread_all_list, &main_thread->all_list_tag)
+    list_append(&thread_all_list, &main_thread->all_list_tag);
 }
 
 // 实现任务调度
@@ -109,6 +111,7 @@ void schedule(){
     thread_tag = list_pop(&thread_ready_list);
     struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
     next->status = TASK_RUNNING;
+    put_str("switch to :"); put_int((int)next); put_str("\n");
     switch_to(cur, next);
 }
 
@@ -122,5 +125,5 @@ void thread_init(void){
     // 将当前main函数创建为线程
     make_main_thread();
 
-    put_str("thread_init start\n");
+    put_str("thread_init end\n");
 }

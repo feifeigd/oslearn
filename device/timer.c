@@ -1,6 +1,8 @@
+#include "debug.h"
 #include "timer.h"
 #include <io.h>
 #include <print.h>
+#include <thread.h>
 
 #define IRQ0_FREQUENCY      100     // 一秒钟 100次时钟中断
 #define INPUT_FREQUENCY     1193180 // 计数器工作频率
@@ -27,9 +29,9 @@ static void intr_timer_handler(void){
     ASSERT(cur_thread->stack_magic == 0x19851122);
     ++cur_thread->elapsed_ticks;
     ++ticks;
-
-    if(0 == cur_thread->ticks)
+    if(0 == cur_thread->ticks){
         schedule();
+    }
     else
         --cur_thread->ticks;    // 当前进程的时间片减
 }
