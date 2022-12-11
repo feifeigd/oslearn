@@ -3,6 +3,8 @@
 #include <debug.h>
 #include <global.h>
 #include <interrupt.h>
+#include <memory.h>
+#include <print.h>
 #include <string.h>
 
 struct task_struct* main_thread;
@@ -73,7 +75,7 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
 }
 
 // 获取当前线程pcb指针
-struct task_struct* running_thread(){
+struct task_struct* running_thread(void){
     uint32_t esp;
     asm ("mov %%esp, %0":"=g"(esp));
     // 取esp整数部分，即pcb起始地址
@@ -126,4 +128,32 @@ void thread_init(void){
     make_main_thread();
 
     put_str("thread_init end\n");
+}
+
+
+// 当前线程将自己阻塞，标志其状态为 stat
+void thread_block(enum task_status stat){
+    ASSERT(TASK_BLOCKED == stat || TASK_WAITING == stat || TASK_HANDGING == stat);
+    enum intr_status old_status = intr_disable();
+    struct task_struct* cur_thread = running_thread();
+    cur_thread->status = stat;
+    schedule(); // 将当前线程换下处理器
+    intr_set_status(old_status);
+}
+
+void thread_unblock(struct task_struct* pthread){
+    enum intr_status old_status = intr_disable();
+    ASSERT(TASK_BLOCKED == pthread->status || TASK_WAITING == pthread->status || TASK_HANDGING == pthread->status);
+    if (TASK_READY != pthread->status )
+    {
+        // ASSERT(!elem_find(&thread_ready_list, &pthread->general_tag));
+        if (elem_find(&thread_ready_list, &pthread->general_tag))
+        {
+            PANIC("thread_unblock: blocked thread in ready_list\n");
+        }
+        list_push(&thread_ready_list, &pthread->general_tag); // 放到队列的前面，使其尽快得到调度
+        pthread->status = TASK_READY;
+    }
+    
+    intr_set_status(old_status);
 }

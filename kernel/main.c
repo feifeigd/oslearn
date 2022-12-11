@@ -1,8 +1,10 @@
 #include "debug.h"
 #include "global.h"
 #include "init.h"
+#include "interrupt.h"
 #include "memory.h"
 #include <print.h>
+#include <thread.h>
 
 static void k_thread_a(void* arg);
 static void k_thread_b(void* arg);
@@ -24,7 +26,7 @@ int main(void){ // b 0x1500
     intr_enable();
 
     while(1){
-        // put_str("Main ");
+        //console_put_str("Main ");
     }
     
     return 0;
@@ -35,9 +37,7 @@ static void k_thread_a(void* arg){
     char* para = arg;
     while (true)
     {
-        put_str("run thread A:");
-        put_str(para);        
-        // put_str("\n");
+        //console_put_str(para);       
         // return;
     }    
 }
@@ -47,9 +47,7 @@ static void k_thread_b(void* arg){
     char* para = arg;
     while (true)
     {
-        put_str("run thread B:");
-        put_str(para);        
-        // put_str("\n");
+        console_put_str(para);
         // return;
     }    
 }

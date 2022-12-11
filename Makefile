@@ -11,7 +11,7 @@ LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I thread
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 
-HEADERS = device/timer.h 											\
+HEADERS = device/timer.h device/console.h											\
 	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	kernel/memory.h	\
 	lib/kernel/bitmap.h												\
 	lib/kernel/io.h													\
@@ -19,10 +19,12 @@ HEADERS = device/timer.h 											\
 	lib/kernel/print.h												\
 	lib/stdint.h													\
 	lib/string.h													\
+	thread/sync.h													\
 	thread/thread.h
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/bitmap.o	\
+	$(BUILD_DIR)/console.o	\
 	$(BUILD_DIR)/debug.o	\
 	$(BUILD_DIR)/init.o		\
 	$(BUILD_DIR)/interrupt.o\
@@ -32,12 +34,13 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/print.o	\
 	$(BUILD_DIR)/string.o	\
 	$(BUILD_DIR)/switch.o	\
+	$(BUILD_DIR)/sync.o		\
 	$(BUILD_DIR)/thread.o	\
 	$(BUILD_DIR)/timer.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	@echo 写入内核
-	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=54 seek=9 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=62 seek=9 conv=notrunc
 
 # 汇编代码
 $(BUILD_DIR)/print.o: lib/kernel/print.S
@@ -54,6 +57,8 @@ $(BUILD_DIR)/main.o: kernel/main.c $(HEADERS)
 
 $(BUILD_DIR)/bitmap.o: lib/kernel/bitmap.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/console.o: device/console.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/debug.o: kernel/debug.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
@@ -64,6 +69,8 @@ $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
 $(BUILD_DIR)/list.o: lib/kernel/list.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/memory.o: kernel/memory.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/sync.o: thread/sync.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@

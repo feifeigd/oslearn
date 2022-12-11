@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "timer.h"
+#include <interrupt.h>
 #include <io.h>
 #include <print.h>
 #include <thread.h>
