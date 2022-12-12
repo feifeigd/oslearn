@@ -13,14 +13,16 @@
 #define EFLAGS_IF 0x00000200    // eflags寄存器的if位为1
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0": "=g"(EFLAG_VAR))
 
+extern uint32_t syscall_handler(void);
+
 // 8字节
 struct gate_desc
 {
-    uint16_t func_offset_low_word;// 中断处理程序在目标代码段内的偏移量的低16位
-    uint16_t selector;// 中断处理程序目标代码段描述符选择子
-    uint8_t dcount; // 此项为双字计数字段，是门描述符中的第4字节，此项固定值，不用考虑
-    uint8_t attribute;// P | DPL | S | TYPE
-    uint16_t func_offset_high_word;// 中断处理程序在目标代码段内的偏移量的高16位
+    uint16_t    func_offset_low_word;// 中断处理程序在目标代码段内的偏移量的低16位
+    uint16_t    selector;// 中断处理程序目标代码段描述符选择子
+    uint8_t     dcount; // 此项为双字计数字段，是门描述符中的第4字节，此项固定值，不用考虑
+    uint8_t     attribute;// P | DPL | S | TYPE
+    uint16_t    func_offset_high_word;// 中断处理程序在目标代码段内的偏移量的高16位
 };
 
 static struct gate_desc idt[IDT_DESC_CNT];
@@ -72,6 +74,11 @@ static void idt_desc_init(void){
     for(i = 0; i < IDT_DESC_CNT; ++i){
         make_idt_desc(&idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);
     }
+    // 单独处理系统调用，系统调用对应的中断门dpl 为3
+    // 中断处理程序为单独的  syscall_handler
+    intr_entry_table[lastindex] = syscall_handler;
+    make_idt_desc(&idt[lastindex], IDT_DESC_ATTR_DPL3, intr_entry_table[lastindex]);
+
     put_str("idt_desc_init done\n");
 }
 

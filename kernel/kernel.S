@@ -35,6 +35,16 @@ intr%1entry:	; 每个中断处理程序都要压入中断向量号，所以一�
 	push %1;
 	call [idt_table + %1 * 4];	// 调C实现的中断处理函数
 
+	jmp intr_exit
+	
+section .data
+	dd intr%1entry; 存储各个中断入口程序的地址，形成intr_entry_table数组
+%endmacro
+
+section .text
+global intr_exit
+intr_exit:
+	; 以下是恢复上下文环境
 	add esp, 4; 跳过终端号
 
 	popad
@@ -45,9 +55,6 @@ intr%1entry:	; 每个中断处理程序都要压入中断向量号，所以一�
 	add esp, 4; 跨过 error_code
 	;hlt; debug
 	iret; 从中断返回，32 位下等同指令 iretd;
-section .data
-	dd intr%1entry; 存储各个中断入口程序的地址，形成intr_entry_table数组
-%endmacro
 
 intr_entry_table:
 	VECTOR 0x00, ZERO
@@ -100,3 +107,39 @@ intr_entry_table:
 	VECTOR 0x2D, ZERO; fpu 浮点单元异常
 	VECTOR 0x2E, ZERO; 硬盘
 	VECTOR 0x2F, ZERO; 保留
+
+; 0x80中断
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+	push 0; 中断若有错误码，会压在 eip 后面
+	; 1 保存上下文环境
+	push ds;
+	push es;
+	push fs;
+	push gs;
+	pushad;
+
+	;push intr_str;
+	;call put_str;
+	;add esp, 4; 跳过参数
+
+	; 如果是从片上进入的中断，除了往从片上发送EOI外，还要往主片上发送 EOI;
+	mov al, EOI;  中断结束命令EOI，手动结束中断
+	out 0xa0, al; 往从片发送, OCW2
+	out 0x20, al; 往主片发送, 为了让8259A接受新的中断，必须要让8259A知道当前中断处理程序已经执行完成
+
+	push 0x80;	// 为了统一栈格式
+	; 2 为系统调用子功能传入参数
+	push edx;
+	push ecx;
+	push ebx;
+	; 3 调用子功能处理函数
+	call [syscall_table + eax * 4];	// 调C实现的中断处理函数
+	add esp, 12; 跨过上面的3个参数
+	; 4 将call调用后的返回值存入待当前内核栈中eax的位置
+	mov [esp + 8*4], eax;
+	jmp intr_exit
+	ret;
