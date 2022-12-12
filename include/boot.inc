@@ -7,7 +7,7 @@ LOADER_SECTOR_COUNT equ 3; loader的大小占用多少个扇区
 KERNEL_BIN_BASE_ADDR	equ 0x70000
 KERNEL_START_SECTOR		equ 0x9
 KERNEL_ENTRY_POINT		equ 0xc0001500; kernel入口虚拟地址
-KERNEL_SECTOR_COUNT		equ 62; kernel.bin 的大小占用多少个扇区
+KERNEL_SECTOR_COUNT		equ 64; kernel.bin 的大小占用多少个扇区
 
 ;-------------- 页表配置
 PAGE_DIR_TABLE_POS	equ 0x00100000; 页目录表物理地址， 起始1MB

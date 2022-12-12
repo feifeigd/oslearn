@@ -5,6 +5,7 @@
 #include <interrupt.h>
 #include <memory.h>
 #include <print.h>
+#include <sync.h>
 #include <string.h>
 
 struct task_struct* main_thread;
