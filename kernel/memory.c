@@ -1,10 +1,10 @@
 #include "debug.h"
+#include "global.h" // PG_SIZE
 #include "memory.h"
+
 #include <print.h>
 #include <stdint.h>
 #include <string.h>
-
-#define PG_SIZE 4096
 
 // 位图地址
 // 因为 0xc009f000 是内核主线程的栈顶，因为 0xc009e000 是内核主线程的pcb
@@ -12,12 +12,13 @@
 // 这样本系统最大支持4个页框的位图，即512MB
 #define MEM_BITMAP_BASE 0xc009a000
 
+#define PDE_IDX(addr) (((addr) & 0xffc00000) >> 22) // 高10位
+#define PTE_IDX(addr) (((addr) & 0x003ff000) >> 12) // 中10位
+
 // 0xc0000000 是内核从虚拟地址3G起
 // 0x100000 意指跨过低端 1MB 内存，使虚拟地址在逻辑上连续
 #define K_HEAP_START 0xc0100000
 
-#define PDE_IDX(addr) (((addr) & 0xffc00000) >> 22) // 高10位
-#define PTE_IDX(addr) (((addr) & 0x003ff000) >> 12) // 中10位
 
 // 内存池结构，生成两个实例用于管理内核内存池和用户内存池
 struct pool{
