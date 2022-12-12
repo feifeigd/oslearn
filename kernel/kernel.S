@@ -133,13 +133,13 @@ syscall_handler:
 
 	push 0x80;	// 为了统一栈格式
 	; 2 为系统调用子功能传入参数
-	push edx;
-	push ecx;
-	push ebx;
+	push edx;	// 系统调用中第三个参数
+	push ecx;	// 系统调用中第二个参数
+	push ebx;	// 系统调用中第一个参数
 	; 3 调用子功能处理函数
 	call [syscall_table + eax * 4];	// 调C实现的中断处理函数
 	add esp, 12; 跨过上面的3个参数
 	; 4 将call调用后的返回值存入待当前内核栈中eax的位置
-	mov [esp + 8*4], eax;
+	mov [esp + (1+7)*4], eax; 1是push 0x80, 7是pushad压入7个寄存器的值，存入到eax的栈位置
 	jmp intr_exit
 	ret;

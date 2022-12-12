@@ -11,6 +11,8 @@ struct task_struct* main_thread;
 struct list thread_ready_list;
 struct list thread_all_list;
 static struct list_elem* thread_tag; // 用于保存队列中的线程结点
+struct lock pid_lock; // 分配pid锁
+
 extern void switch_to(struct task_struct* cur, struct task_struct* next);
 
 // 由 kernel_thread 去执行 function(func_arg)
@@ -38,9 +40,19 @@ void thread_create(struct task_struct* pthread, thread_func function, void* func
     kthread_stack->ebp = kthread_stack->ebx = kthread_stack->esi = kthread_stack->edi = 0;
 }
 
+static pid_t allocate_pid(void){
+    static pid_t next_pid = 0;
+    
+    lock_acquire(&pid_lock);
+    pid_t pid = ++next_pid;
+    lock_release(&pid_lock);
+    return pid;
+}
+
 // 初始化线程基本信息
 void init_thread(struct task_struct* pthread, char* name, int prio){
     memset(pthread, 0, sizeof(*pthread));
+    pthread->pid = allocate_pid();
     strcpy(pthread->name, name);
 
     pthread->status = pthread == main_thread ? TASK_RUNNING : TASK_READY;   // 由于把main函数也封装成一个线程，并且它一直是运行的
@@ -123,6 +135,7 @@ void thread_init(void){
 
     list_init(&thread_ready_list);
     list_init(&thread_all_list);
+    lock_init(&pid_lock);
     
     // 将当前main函数创建为线程
     make_main_thread();

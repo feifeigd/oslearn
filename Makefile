@@ -6,7 +6,7 @@ ENTRY_POINT = 0xc0001500
 
 AS = nasm
 ASFLAGS = -f elf
-LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I thread
+LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I lib/user -I thread
 
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
@@ -35,6 +35,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/string.o	\
 	$(BUILD_DIR)/switch.o	\
 	$(BUILD_DIR)/sync.o		\
+	$(BUILD_DIR)/syscall-init.o	\
 	$(BUILD_DIR)/thread.o	\
 	$(BUILD_DIR)/timer.o	
 
@@ -77,6 +78,8 @@ $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
 $(BUILD_DIR)/thread.o: thread/thread.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/string.o: lib/string.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/syscall-init.o: userprog/syscall-init.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 ########## 链接所有目标
