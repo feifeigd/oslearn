@@ -6,7 +6,7 @@ ENTRY_POINT = 0xc0001500
 
 AS = nasm
 ASFLAGS = -f elf
-LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I lib/user -I thread
+LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I lib/user -I thread -I userprog
 
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
@@ -20,7 +20,8 @@ HEADERS = device/console.h device/ioqueue.h device/keyboard.h device/timer.h		\
 	lib/stdint.h													\
 	lib/string.h													\
 	thread/sync.h													\
-	thread/thread.h
+	thread/thread.h													\
+	userprog/tss.h
 
 OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/bitmap.o	\
@@ -39,7 +40,8 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/sync.o		\
 	$(BUILD_DIR)/syscall-init.o	\
 	$(BUILD_DIR)/thread.o	\
-	$(BUILD_DIR)/timer.o	
+	$(BUILD_DIR)/timer.o	\
+	$(BUILD_DIR)/tss.o	
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	@echo 写入内核
@@ -79,13 +81,15 @@ $(BUILD_DIR)/memory.o: kernel/memory.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/sync.o: thread/sync.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/string.o: lib/string.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/syscall-init.o: userprog/syscall-init.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/thread.o: thread/thread.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
-$(BUILD_DIR)/string.o: lib/string.c $(HEADERS)
-	$(CC) $(CFLAGS) $< -o $@
-$(BUILD_DIR)/syscall-init.o: userprog/syscall-init.c $(HEADERS)
+$(BUILD_DIR)/tss.o: userprog/tss.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 ########## 链接所有目标

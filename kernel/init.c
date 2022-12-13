@@ -7,6 +7,7 @@
 #include <console.h>
 #include <keyboard.h>
 #include <print.h>
+#include <tss.h>
 
 // 负责初始化所有模块
 void init_all(void){
@@ -17,4 +18,5 @@ void init_all(void){
     timer_init();   // 初始化 PIT
     console_init(); // 在开中断之前
     keyboard_init();
+    // tss_init();
 }
