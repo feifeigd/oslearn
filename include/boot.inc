@@ -1,8 +1,9 @@
 
 ;--------------------- loader 和 kernel
 LOADER_BASE_ADDR 	equ 0x900
+loader_start_offset equ 0x300
 LOADER_START_SECTOR equ 0x2; LBA 地址，第2块扇区. 第0个扇区是MBR，第1个扇区空置还没使用
-LOADER_SECTOR_COUNT equ 3; loader的大小占用多少个扇区
+LOADER_SECTOR_COUNT equ 4; loader 的大小占用多少个扇区
 
 KERNEL_BIN_BASE_ADDR	equ 0x70000
 KERNEL_START_SECTOR		equ 0x9

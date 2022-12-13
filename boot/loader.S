@@ -5,7 +5,7 @@ LOADER_STACK_TOP equ LOADER_BASE_ADDR
 [bits 16]
 ; loader 的大小，不能超过64KB，因为实模式下偏移地址是16位，只能访问 0~FFFFh
 section loader vstart=LOADER_BASE_ADDR ; b 0x900
-	jmp loader_start;
+	;jmp loader_start;
 	
 
 ; 构建 gdt 及其内部的描述符
@@ -24,7 +24,7 @@ DATA_STACK_DESC:
 VIDEO_DESC:
 	dd 0x80000007; 文本模式 limit=(0xbffff-0xb8000) / 4k = 0x0007, 段基址=(DESC_VIDEO_HIGH4中0x00与0xb 与 0x8000 合成 0x000b8000)
 	dd DESC_VIDEO_HIGH4
-
+times 3 dq 0; tss code data
 GDT_SIZE	equ $ - GDT_BASE
 GDT_LIMIT	equ GDT_SIZE - 1
 ; times 60 dq 0; 此处预留60个描述符的空位
@@ -57,6 +57,8 @@ ards_nr dw 0; 用于记录ARDS的结构体数量
 loadermsg 		db '2 loader in real.'
 loadermsg_len	equ $ - loadermsg
 
+times (loader_start_offset - ($ - $$)) db 0
+; 使偏移为 loader_start_offset
 loader_start:
 	call print
 	call detect_memory

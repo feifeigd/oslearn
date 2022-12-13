@@ -25,7 +25,7 @@ section MBR vstart=0x7c00
 	mov bx, LOADER_BASE_ADDR; 写入的地址
 	mov cx, LOADER_SECTOR_COUNT; 待读入的扇区数
 	call rd_disk_m_16; 以下读取程序的其实部分(一个扇区)
-	jmp LOADER_BASE_ADDR;
+	jmp LOADER_BASE_ADDR + loader_start_offset; loader.S:loader_start
 	
 	;jmp $	; 使程序悬停在此
 	
