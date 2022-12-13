@@ -39,6 +39,7 @@
 #define SELECTOR_K_STACK SELECTOR_K_DATA
 #define SELECTOR_K_GS   ((3 << 3) | (TI_GDT_2 << 2) | RPL1_0_0) // 第三个段描述符是显存，
 // 第四个是tss
+#define SELECTOR_TSS (4 << 3 | TI_GDT_2 << 2 | RPL1_0_0)    // 第四个是tss
 // 第5个用户代码段
 #define SELECTOR_U_CODE ((5 << 3) | (TI_GDT_2 << 2) | RPL1_0_3)
 // 第6个用户数据段
@@ -72,7 +73,11 @@
 #define TSS_ATTR_LOW \
     (DESC_P << 7 | DESC_DPL_0 << 5 | DESC_S_SYS << 4 | DESC_TYPE_TSS)
 
-#define SELECTOR_TSS (4 << 3 | TI_GDT_2 << 2 | RPL1_0_0)    // 第四个是tss
+#define EFLAGS_MBS (1 << 1) // 此项必须要设置
+#define EFLAGS_IF_1 (1 << 9) // IF=1 开中断
+#define EFLAGS_IF_0 (0 << 0) // IF=1 关中断
+#define EFLAGS_IOPL_3 (3 << 12) // IOPL3 用于测试用户程序在非系统调用进行IO
+#define EFLAGS_IOPL_0 (0 << 12) // IOPL0
 
 #define NULL ((void*)0)
 #define DIV_ROUND_UP(X, STEP) (((X) + (STEP) - 1) / (STEP))
@@ -80,7 +85,9 @@
 #define true    1
 #define false   0
 
+#define PAGE1   0x1000
 #define PG_SIZE 4096
+
 #define UNUSED __attribute__((unused))
 
 struct gdt_desc{
