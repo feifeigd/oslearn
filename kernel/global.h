@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #define LOADER_BASE_ADDR  0x900
-#define GDT_BASE 0x900
+#define GDT_BASE LOADER_BASE_ADDR
 
 // -------------- GDT 描述符熟悉
 #define DESC_G_4K   1
@@ -33,13 +33,15 @@
 
 #define TI_GDT_2 0
 #define TI_lDT_2 1
+// 选择子
 #define SELECTOR_K_CODE ((1 << 3) | (TI_GDT_2 << 2) | RPL1_0_0)
 #define SELECTOR_K_DATA ((2 << 3) | (TI_GDT_2 << 2) | RPL1_0_0)
 #define SELECTOR_K_STACK SELECTOR_K_DATA
 #define SELECTOR_K_GS   ((3 << 3) | (TI_GDT_2 << 2) | RPL1_0_0) // 第三个段描述符是显存，
 // 第四个是tss
-
+// 第5个用户代码段
 #define SELECTOR_U_CODE ((5 << 3) | (TI_GDT_2 << 2) | RPL1_0_3)
+// 第6个用户数据段
 #define SELECTOR_U_DATA ((6 << 3) | (TI_GDT_2 << 2) | RPL1_0_3)
 #define SELECTOR_U_STACK SELECTOR_U_DATA
 

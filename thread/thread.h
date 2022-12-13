@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list.h>
+#include <memory.h>
 #include <stdint.h>
 
 typedef void thread_func(void*);
@@ -86,6 +87,7 @@ struct task_struct
     struct list_elem general_tag; // 用于线程中一般的队列中的结点
     struct list_elem all_list_tag;
     uint32_t* pgdir;// 进程自己页表的虚拟地址，如果该任务上线程，则pgdir为NULL
+    struct virtual_addr userprog_vaddr;// 用户进程的虚拟地址
     uint32_t stack_magic;   // 栈的边界标记，用于检测栈的溢出
 };
 
