@@ -187,7 +187,7 @@ p_mode_start:
 	mov ax, SELECTOR_VIDEO
 	MOV gs, ax
 
-	mov byte gs:[0xA0], 'P'	
+	mov byte [gs:0xA0], 'P'	
 	
 ;---------------- 加载 kernel
 	mov eax, KERNEL_START_SECTOR; kernel.bin 所在的扇区号
@@ -229,7 +229,7 @@ p_mode_start:
 
 ; 操作显卡	
 set_screen:
-	mov byte gs:[0xA0], '2'; 覆盖 P
+	mov byte [gs:0xA0], '2'; 覆盖 P
 	;mov byte[gs:0xA1], 0xA4; A表示绿色背景闪烁，4表示前景色为红色
 
 	mov byte[gs:0xA2], ' '	
@@ -256,12 +256,12 @@ set_screen:
 	ret
 
 show_kernel:
-	mov byte gs:[0x140], 'K';
-	mov byte gs:[0x142], 'E';
-	mov byte gs:[0x144], 'R';
-	mov byte gs:[0x146], 'N';
-	mov byte gs:[0x148], 'E';
-	mov byte gs:[0x14A], 'L';
+	mov byte [gs:0x140], 'K';
+	mov byte [gs:0x142], 'E';
+	mov byte [gs:0x144], 'R';
+	mov byte [gs:0x146], 'N';
+	mov byte [gs:0x148], 'E';
+	mov byte [gs:0x14A], 'L';
 
 	ret;
 

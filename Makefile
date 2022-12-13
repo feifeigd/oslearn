@@ -11,7 +11,7 @@ LIB = -I device/ -I kernel/ -I lib/ -I lib/kernel -I lib/user -I thread
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes -fno-stack-protector
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 
-HEADERS = device/timer.h device/console.h											\
+HEADERS = device/console.h device/keyboard.h device/timer.h							\
 	kernel/debug.h kernel/global.h kernel/init.h kernel/interrupt.h	kernel/memory.h	\
 	lib/kernel/bitmap.h												\
 	lib/kernel/io.h													\
@@ -30,6 +30,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 	$(BUILD_DIR)/interrupt.o\
 	$(BUILD_DIR)/list.o		\
 	$(BUILD_DIR)/kernel.o	\
+	$(BUILD_DIR)/keyboard.o	\
 	$(BUILD_DIR)/memory.o	\
 	$(BUILD_DIR)/print.o	\
 	$(BUILD_DIR)/string.o	\
@@ -66,6 +67,8 @@ $(BUILD_DIR)/init.o: kernel/init.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/interrupt.o: kernel/interrupt.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/keyboard.o: device/keyboard.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/list.o: lib/kernel/list.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@

@@ -56,6 +56,7 @@ intr_exit:
 	;hlt; debug
 	iret; 从中断返回，32 位下等同指令 iretd;
 
+section .data
 intr_entry_table:
 	VECTOR 0x00, ZERO
 	VECTOR 0x01, ZERO

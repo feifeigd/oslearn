@@ -74,7 +74,7 @@ get_cursor:
 set_screen:
 	;mov ax, 0;
 	;mov cx, message_len
-	mov byte gs:[0], '1'	
+	mov byte[gs:0x00], '1'	
 	mov byte[gs:0x01], 0xA4; A表示绿色背景闪烁，4表示前景色为红色
 
 	mov byte[gs:0x02], ' '	

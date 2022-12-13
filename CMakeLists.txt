@@ -20,9 +20,4 @@ include_directories(include)
 # 输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-# aux_source_directory(. SRC)
-set(SRC a.asm b.asm)
-add_executable(abc ${SRC})
-set_target_properties(abc PROPERTIES LINKER_LANGUAGE NASM)
-
 add_subdirectory(boot)
