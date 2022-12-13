@@ -1,5 +1,6 @@
-#include "keyboard.h"
 
+#include "ioqueue.h"
+#include "keyboard.h"
 #include <global.h> // bool
 #include <io.h>
 #include <stdio.h>
@@ -32,6 +33,8 @@
 #define ctrl_r_make     0xe01d
 #define ctrl_r_break    0xe09d
 #define caps_lock_make  0x3a
+
+struct ioqueue kbd_buf;
 
 // 定义以下变量记录相应键是否按下的状态
 // ext_scancode 用于记录makecode是否以0xe0开头
@@ -170,7 +173,10 @@ static void intr_keyboard_handler(void){
         char cur_char = keymap[index][shift];
         // 只处理ASCII码不为零的键
         if(cur_char){
-            put_char(cur_char);
+            if(!ioq_full(&kbd_buf)){
+                put_char(cur_char);
+                ioq_putchar(&kbd_buf, cur_char);
+            }
             return;
         }
         // 记录本次是否按下了下面几类控制键,供下次键入时判断组合键
@@ -193,6 +199,7 @@ static void intr_keyboard_handler(void){
 void keyboard_init(void){
     put_str("keyboard init start\n");
 
+    ioqueue_init(&kbd_buf);
     register_handler(0x21, intr_keyboard_handler);
 
     put_str("keyboard init end\n");

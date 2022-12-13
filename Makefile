@@ -43,7 +43,7 @@ OBJS = $(BUILD_DIR)/main.o	\
 
 hd: mkdir mk_img $(BUILD_DIR)/kernel.bin
 	@echo 写入内核
-	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=64 seek=9 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$(DISK_IMG) bs=512 count=66 seek=9 conv=notrunc
 
 # 汇编代码
 $(BUILD_DIR)/print.o: lib/kernel/print.S

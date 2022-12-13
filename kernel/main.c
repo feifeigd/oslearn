@@ -2,6 +2,7 @@
 #include "global.h"
 #include "init.h"
 #include "interrupt.h"
+#include "keyboard.h"
 #include "memory.h"
 #include <print.h>
 #include <thread.h>
@@ -37,7 +38,13 @@ static void k_thread_a(void* arg){
     char* para = arg;
     while (true)
     {
-        //console_put_str(para);       
+        enum intr_status old_status = intr_disable();
+        if(!ioq_empty(&kbd_buf)){
+            console_put_str(para);
+            char byte = ioq_getchar(&kbd_buf);
+            console_put_char(byte);
+        }     
+        intr_set_status(old_status);
         // return;
     }    
 }
@@ -47,7 +54,13 @@ static void k_thread_b(void* arg){
     char* para = arg;
     while (true)
     {
-        console_put_str(para);
+        enum intr_status old_status = intr_disable();
+        if(!ioq_empty(&kbd_buf)){
+            console_put_str(para);
+            char byte = ioq_getchar(&kbd_buf);
+            console_put_char(byte);
+        }     
+        intr_set_status(old_status);
         // return;
     }    
 }
