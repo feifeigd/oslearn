@@ -85,8 +85,15 @@
 #define true    1
 #define false   0
 
-#define PAGE1   0x1000
-#define PG_SIZE 4096
+// 内存单位
+#define KB1		0x400 // 1KB
+#define KB4 	(4 * KB1) // 4KB
+#define KB64	(64 * KB1) // 64KB
+#define MB1 	(KB1 * KB1) // 1MB
+
+#define PAGE1	KB4
+#define PG_SIZE KB4
+#define PAGE_DIR_TABLE_POS MB1 // 页目录表物理地址， 起始1MB
 
 #define UNUSED __attribute__((unused))
 

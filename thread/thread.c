@@ -5,6 +5,7 @@
 #include <interrupt.h>
 #include <memory.h>
 #include <print.h>
+#include <process.h>
 #include <sync.h>
 #include <string.h>
 

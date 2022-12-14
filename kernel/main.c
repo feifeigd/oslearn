@@ -5,6 +5,7 @@
 #include "keyboard.h"
 #include "memory.h"
 #include <print.h>
+#include <process.h>
 #include <thread.h>
 
 static void k_thread_a(void* arg);

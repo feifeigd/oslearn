@@ -1,6 +1,9 @@
-#include <global.h> // PG_SIZE
+#include "tss.h"
 
+#include <global.h> // PG_SIZE
+#include <print.h>
 #include <stdint.h>
+#include <string.h>
 
 // 任务状态段tss结构
 struct tss
